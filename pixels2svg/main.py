@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple, TypeVar, Union
 import cc3d
 import numpy as np
 from svgwrite.container import Group
-
+import PIL
 from pixels2svg.utils import geometry, pixel, preprocessing, svg
 from pixels2svg.utils.geometry import Contours
 
@@ -114,7 +114,7 @@ def trace_pixel_polygons_as_svg(rgba_array: np.ndarray,
 
 
 def pixels2svg(input_path: Optional[str] = None,
-               bitmap_content: Optional[np.ndarray] = None,
+               bitmap_content: Optional[PIL.Image.Image] = None,
                output_path: Optional[str] = None,
                group_by_color: bool = True,
                color_tolerance: int = 0,
