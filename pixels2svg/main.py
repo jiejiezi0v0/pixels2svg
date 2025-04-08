@@ -6,6 +6,7 @@ import datetime
 import os
 
 # Third-party imports
+import PIL
 import cc3d
 import numpy as np
 from PIL import Image
