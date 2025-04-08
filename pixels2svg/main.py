@@ -113,7 +113,8 @@ def trace_pixel_polygons_as_svg(rgba_array: np.ndarray,
     return svg_img
 
 
-def pixels2svg(input_path: str,
+def pixels2svg(input_path: Optional[str] = None,
+               bitmap_content: Optional[np.ndarray] = None,
                output_path: Optional[str] = None,
                group_by_color: bool = True,
                color_tolerance: int = 0,
@@ -166,8 +167,10 @@ def pixels2svg(input_path: str,
     Optional[Union[svg.Drawing, str]]
         Depends on the `output_path` and `as_string` parameters
     """
-
-    img_rgba_array = pixel.read_image(input_path)
+    if bitmap_content is not None:
+        img_rgba_array = pixel.read_image(bitmap_content)
+    else:
+        img_rgba_array = pixel.read_image(input_path)
 
     if color_tolerance > 0:
         img_rgba_array = preprocessing.apply_color_tolerance(
