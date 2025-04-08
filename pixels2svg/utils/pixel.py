@@ -2,6 +2,7 @@ from typing import Tuple
 
 import numpy as np
 from PIL import Image
+import PIL
 
 PixelRGBA = Tuple[int, int, int, int]
 PixelRGB = Tuple[int, int, int]
