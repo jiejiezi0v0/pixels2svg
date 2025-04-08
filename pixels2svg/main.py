@@ -69,46 +69,58 @@ def find_contours(
     return result
 
 
-def trace_pixel_polygons_as_svg(rgba_array: np.ndarray,
-                                group_by_color: bool = False) -> svg.Drawing:
+def trace_pixel_polygons_as_svg(rgba_array: np.ndarray, group_by_color: bool = False) -> svg.Drawing:
     traced_contours = find_contours(rgba_array, group_by_color)
-
     svg_img = svg.Drawing(rgba_array.shape[0], rgba_array.shape[1])
-
-    has_opacity = np.any(rgba_array[:, :, 3] < 255)
-
-    def color_to_id(color: pixel.PixelRGBA) -> str:
-        hex_color = pixel.rgb_color_to_hex_code(color[:3])[1:]
-        opacity = color[3] / 255
-        color_id = f'x{hex_color}_r{color[0]}_g{color[1]}_b{color[2]}'
-        if has_opacity:
-            color_id = f'{color_id}_a{opacity}'
-        return color_id
-
+    
+    # Track used colors to reuse existing groups
+    color_groups = {}
+    
+    def get_minimal_color_id(color: pixel.PixelRGBA) -> str:
+        # Use base64 encoding for ultra-compact color representation
+        return str(base64.b64encode(bytes(color)), 'utf-8')[:6]
+    
     if group_by_color:
-        traced_contours: Dict[pixel.PixelRGBA, Tuple[Contours, ...]]
         for color, contours_tuple in traced_contours.items():
-            color_id = color_to_id(color)
-            group = Group(id=color_id)
-            for i, contour in enumerate(contours_tuple, start=1):
-                polygon_id = f'{color_id}_shape{i}'
-                svg.draw_polygon(group,
-                                 contour.outside,
-                                 holes=contour.inner_holes,
-                                 color=color,
-                                 id=polygon_id)
-            svg_img.add(group)
-
+            color_hex = pixel.rgb_color_to_hex_code(color[:3])
+            opacity = color[3] / 255
+            
+            # Create ultra-compact path data
+            paths = []
+            for contour in contours_tuple:
+                # Optimize coordinates by removing redundant precision
+                path = f"M{','.join(f'{int(x)},{int(y)}' for x,y in contour.outside)}Z"
+                if contour.inner_holes:
+                    for hole in contour.inner_holes:
+                        path += f"M{','.join(f'{int(x)},{int(y)}' for x,y in hole)}Z"
+                paths.append(path)
+            
+            # Create or reuse group
+            cid = get_minimal_color_id(color)
+            if cid not in color_groups:
+                g = Group()
+                if opacity < 1:
+                    g.update({'fill': color_hex, 'fill-opacity': f"{opacity:.2f}"})
+                else:
+                    g.update({'fill': color_hex})
+                color_groups[cid] = g
+                svg_img.add(g)
+            
+            # Add paths to group with minimal attributes
+            for path in paths:
+                color_groups[cid].add(Path(d=path))
     else:
-        traced_contours: Tuple[Tuple[Contours, pixel.PixelRGBA], ...]
-        for i, (contour, color) in enumerate(traced_contours, start=1):
-            color_id = color_to_id(color)
-            polygon_id = f'shape{i}_{color_id}'
-            svg.draw_polygon(svg_img,
-                             contour.outside,
-                             holes=contour.inner_holes,
-                             color=color,
-                             id=polygon_id)
+        # Process individual contours with minimal attributes
+        for contour, color in traced_contours:
+            path = f"M{','.join(f'{int(x)},{int(y)}' for x,y in contour.outside)}Z"
+            if contour.inner_holes:
+                for hole in contour.inner_holes:
+                    path += f"M{','.join(f'{int(x)},{int(y)}' for x,y in hole)}Z"
+            
+            attrs = {'d': path, 'fill': pixel.rgb_color_to_hex_code(color[:3])}
+            if color[3] < 255:
+                attrs['fill-opacity'] = f"{color[3]/255:.2f}"
+            svg_img.add(Path(**attrs))
 
     return svg_img
 
