@@ -8,8 +8,11 @@ PixelRGB = Tuple[int, int, int]
 TRUE_TRANSPARENT: PixelRGBA = (255, 255, 255, 0)
 
 
-def read_image(image_path: str) -> np.ndarray:
-    image = Image.open(image_path)
+def read_image(image_path: str|np.ndarray) -> np.ndarray:
+    if isinstance(image_path, np.ndarray):
+        image = Image.fromarray(image_path)
+    else:
+        image = Image.open(image_path)
     mode = image.mode
     rgba_image = image.convert('RGBA')
     image.close()
