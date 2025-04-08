@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple, TypeVar, Union
 
+import base64
 import cc3d
 import numpy as np
 from svgwrite.container import Group
