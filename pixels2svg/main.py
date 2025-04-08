@@ -1,13 +1,23 @@
+# Standard library imports
 from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple, TypeVar, Union
-
 import base64
+import datetime
+import os
+
+# Third-party imports
 import cc3d
 import numpy as np
+from PIL import Image
+import svgwrite
 from svgwrite.container import Group
-import PIL
+from svgwrite.path import Path
+from svgwrite.drawing import Drawing
+
+# Local imports
 from pixels2svg.utils import geometry, pixel, preprocessing, svg
 from pixels2svg.utils.geometry import Contours
+from pixels2svg.utils.pixel import PixelRGBA
 
 T = TypeVar('T')
 
